@@ -1,0 +1,296 @@
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
+import { styles } from '../styles';
+
+// --- Animation helpers - Optimized for faster loading ---
+const textVariant = (delay = 0) => ({
+  hidden: { opacity: window.innerWidth < 768 ? 1 : 0 },
+  show: {
+    opacity: 1,
+    transition: { type: "tween", duration: window.innerWidth < 768 ? 0 : 0.3, delay: window.innerWidth < 768 ? 0 : delay * 0.5 }
+  }
+});
+const fadeIn = (dir, type, delay, duration) => ({
+  hidden: {
+    opacity: window.innerWidth < 768 ? 1 : 0,
+  },
+  show: {
+    opacity: 1,
+    transition: { type: "tween", delay: window.innerWidth < 768 ? 0 : delay * 0.3, duration: window.innerWidth < 768 ? 0 : duration * 0.5, ease: "easeOut" }
+  },
+});
+
+// --- Animated counter for stats - Faster animation ---
+const AnimatedNumber = ({ value }) => {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    let start = 0;
+    const end = parseInt(value);
+    if (isNaN(end)) return;
+    const step = end / (300 / 16); // Reduced from 500ms to 300ms
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        clearInterval(timer);
+        setDisplay(value);
+      } else setDisplay(Math.floor(start) + "+");
+    }, 16);
+    return () => clearInterval(timer);
+  }, [value]);
+  return <>{display}</>;
+};
+
+// --- Icon wrapper ---
+const IconComponent = ({ children }) => (
+  <div className="w-8 h-8">{children}</div>
+);
+const CloudIcon = () => (
+  <IconComponent>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-full h-full">
+      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+    </svg>
+  </IconComponent>
+);
+const ServerIcon = () => (
+  <IconComponent>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-full h-full">
+      <rect x="2" y="3" width="20" height="4" rx="1"/>
+      <rect x="2" y="9" width="20" height="4" rx="1"/>
+      <rect x="2" y="15" width="20" height="4" rx="1"/>
+      <circle cx="6" cy="5" r="0.5"/>
+      <circle cx="6" cy="11" r="0.5"/>
+      <circle cx="6" cy="17" r="0.5"/>
+    </svg>
+  </IconComponent>
+);
+const CodeIcon = () => (
+  <IconComponent>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-full h-full">
+      <polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/>
+    </svg>
+  </IconComponent>
+);
+const NetworkIcon = () => (
+  <IconComponent>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-full h-full">
+      <circle cx="12" cy="12" r="2"/>
+      <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+    </svg>
+  </IconComponent>
+);
+const SecurityIcon = () => (
+  <IconComponent>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-full h-full">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  </IconComponent>
+);
+const MonitorIcon = () => (
+  <IconComponent>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-full h-full">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+  </IconComponent>
+);
+
+// --- Services data ---
+const services = [
+  { title: "Product Strategy", description: "Defining roadmaps and aligning product vision with business goals", icon: CloudIcon, technologies: ["Roadmapping","Vision","Prioritization","OKRs"] },
+  { title: "Growth & Experimentation", description: "Driving adoption and revenue through funnel optimization and A/B testing", icon: CodeIcon, technologies: ["A/B Testing","Funnels","Retention","Cohorts"] },
+  { title: "User Research", description: "Turning user insights and interviews into product decisions", icon: ServerIcon, technologies: ["Research","Interviews","Personas","JTBD"] },
+  { title: "Data & Analytics", description: "Making decisions with SQL, Amplitude, and product dashboards", icon: MonitorIcon, technologies: ["SQL","Amplitude","Dashboards","Metrics"] },
+  { title: "Fintech Products", description: "Building investments, lending, and payments products at scale", icon: SecurityIcon, technologies: ["Investments","Lending","Payments","Compliance"] },
+  { title: "Stakeholder Management", description: "Aligning engineering, design, and business through Agile delivery", icon: NetworkIcon, technologies: ["Agile","Scrum","Collaboration","Delivery"] },
+];
+
+
+const About = () => {
+  const [hoveredCard, setHoveredCard] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef(null);
+  
+  useEffect(() => {
+    // Defer visibility to next idle callback for better performance
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => setIsVisible(true));
+    } else {
+      setTimeout(() => setIsVisible(true), 0);
+    }
+  }, []);
+  
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start end", "end start"] });
+  const smoothY = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  const backgroundY = useTransform(smoothY, [0, 1], ["0%", "32%"]);
+  // Disable parallax on mobile to prevent overlap
+  const contentY = useTransform(smoothY, [0, 1], window.innerWidth < 768 ? ["0%", "0%"] : ["0%", "-7%"]);
+
+  return (
+    <section ref={containerRef} id="about" className="relative w-full min-h-screen overflow-hidden pt-20 pb-8 sm:pt-16 sm:pb-0 z-10 bg-transparent">
+
+      <motion.div className="relative w-full max-w-7xl mx-auto px-6 pt-0 sm:pt-2 lg:pt-3 pb-0" style={{ y: window.innerWidth < 768 ? 0 : contentY }}>
+        {/* Header */}
+        <div className="mb-2 text-center relative">
+          {/* Simple static icon */}
+          <div className="flex justify-center mb-4">
+            <div className="relative">
+              <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 backdrop-blur-xl border-2 border-cyan-400/30 flex items-center justify-center shadow-2xl shadow-cyan-500/20">
+                <svg 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  className="w-10 h-10 text-cyan-300 relative z-10"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-cyan-400 tracking-[0.3em] uppercase mb-3">Introduction</p>
+          <h2 className="text-5xl md:text-7xl font-black text-white mb-6">About Me</h2>
+          
+          {/* Oceanic Gradient Divider */}
+          <motion.div 
+            className="flex items-center justify-center mb-6 sm:mb-8"
+            initial={{ scaleX: window.innerWidth < 768 ? 1 : 0, opacity: window.innerWidth < 768 ? 1 : 0 }}
+            whileInView={{ scaleX: 1, opacity: 1 }}
+            transition={{ duration: window.innerWidth < 768 ? 0 : 1, delay: window.innerWidth < 768 ? 0 : 0.3 }}
+          >
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="w-6 sm:w-10 h-0.5 bg-gradient-to-r from-transparent to-cyan-400"></div>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full"></div>
+              <div className="w-12 sm:w-24 h-0.5 bg-gradient-to-r from-cyan-400 via-blue-500 to-teal-400"></div>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-gradient-to-br from-blue-500 to-teal-400 rounded-full"></div>
+              <div className="w-6 sm:w-10 h-0.5 bg-gradient-to-r from-teal-400 to-transparent"></div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Profile & Intro */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 mb-2">
+          <div className="lg:col-span-4 flex justify-center">
+            <picture>
+              <source
+                media="(max-width: 640px)"
+                srcSet="/profileAD-mobile.jpg 1x, /profileAD-mobile.jpg 2x"
+                type="image/jpeg"
+              />
+              <source
+                media="(max-width: 640px)"
+                srcSet="/profileAD-mobile.png 1x, /profileAD-mobile.png 2x"
+                type="image/png"
+              />
+              <source
+                srcSet="/profileAD.png"
+                type="image/png"
+              />
+              <img
+                src="/profileAD-mobile.jpg"
+                alt="Aditya Dubey"
+                className="rounded-3xl w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 object-cover border border-slate-700 shadow-lg"
+                loading="eager"
+                fetchpriority="high"
+              />
+            </picture>
+          </div>
+          <div className="lg:col-span-8 space-y-4 text-slate-300 leading-relaxed mt-10">
+            <p><span className="font-bold text-cyan-400">4+ years</span> of experience building fintech products across investments, lending, and payments at INDmoney, Jupiter Money, and Axis Bank.</p>
+            <p>Skilled in product strategy, user research, A/B testing, and data-driven growth — turning insights into products users love.</p>
+            <p>Passionate about solving real user problems and driving measurable business impact.</p>
+            <div className="flex flex-wrap gap-4 mt-2">
+              {['Product Strategy', 'Fintech', 'Growth', 'User Research'].map((skill, i) => (
+                <span key={i} className="px-6 py-2 rounded-2xl bg-slate-800 text-slate-300 border border-slate-700">{skill}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+
+        {/* Enhanced Core Expertise Section — as provided */}
+        <motion.div
+          initial={{ opacity: 1, y: 0 }}
+          whileInView="show"
+          viewport={{ once: true }}
+          className="mt-12 sm:mt-16"
+        >
+          <div className="text-center mb-2">
+            <motion.h3 
+              className="text-4xl font-black text-white mb-6"
+              initial={{ opacity: window.innerWidth < 768 ? 1 : 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: window.innerWidth < 768 ? 0 : 0.3 }}
+            >
+              Core Expertise
+            </motion.h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((service, index) => (
+              <motion.div
+                key={service.title}
+                className="group bg-transparent backdrop-blur-sm rounded-xl p-6 border border-slate-700/40 hover:border-slate-500/60 transition-all duration-300 relative overflow-hidden"
+                whileHover={{
+                  y: -2,
+                  transition: { duration: 0.2 }
+                }}
+                onMouseEnter={() => setHoveredCard(`service-${index}`)}
+                onMouseLeave={() => setHoveredCard(null)}
+                initial={{ opacity: window.innerWidth < 768 ? 1 : 0 }}
+                animate={isVisible ? { 
+                  opacity: 1
+                } : {}}
+                transition={{
+                  type: 'tween',
+                  duration: 0.2,
+                  delay: index * 0.02
+                }}
+              >
+                <div 
+                  className="absolute inset-0 bg-slate-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl"
+                />
+                
+                <div className="flex items-start gap-4 mb-4 relative z-10">
+                  <div className="w-16 h-16 flex items-center justify-center">
+                    <div
+                      className="w-full h-full flex items-center justify-center transition-all duration-200"
+                      style={{
+                        filter: hoveredCard === `service-${index}` ? 'brightness(1.3)' : 'brightness(1)',
+                        transform: hoveredCard === `service-${index}` ? 'translateY(-2px)' : 'translateY(0)'
+                      }}
+                    >
+                      <service.icon />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-lg font-semibold text-white mb-2 group-hover:text-slate-100 transition-colors">
+                      {service.title}
+                    </h4>
+                    <p className="text-slate-400 text-sm leading-relaxed group-hover:text-slate-300 transition-colors">
+                      {service.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 relative z-10">
+                  {service.technologies.map((tech, techIndex) => (
+                    <span
+                      key={tech}
+                      className="px-2 py-1 text-xs rounded-lg bg-slate-800/40 text-slate-500 border border-slate-700/40 font-medium hover:bg-slate-700/40 hover:text-slate-400 hover:border-slate-600/40 transition-all duration-300 hover:scale-105 transform transition-transform"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
+    </section>
+  );
+};
+
+export default About;
