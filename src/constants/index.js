@@ -144,6 +144,81 @@ export const experiences = [
 
 export const projects = [
   {
+    name: "Axis Mutual Fund Platform",
+    description:
+      "Led digital transformation of Axis Mutual Funds — redesigned customer folio and investment journeys with a customer-first approach, driving ₹4,500 Cr annual GTV. Leveraged design thinking and Agile methodologies across a 10M+ customer base.",
+    tags: [
+      { name: "Fintech", color: "blue-text-gradient" },
+      { name: "Mutual Funds", color: "green-text-gradient" },
+      { name: "Agile", color: "pink-text-gradient" },
+    ],
+    category: "Product",
+    status: "Completed",
+    highlights: ["₹4,500 Cr Annual GTV", "10M+ customers"],
+    image: "images/axis-mf.png",
+    source_code_link: "https://www.figma.com/design/lSJNoc8zmpaZBwZ6hAFAFm/User-Research-MF?node-id=0-1&t=8Tx7lj74aBGtIeAb-1",
+  },
+  {
+    name: "Digital Gold (Jupiter Money)",
+    description:
+      "Partnered with Safe Gold to scale digital gold investments — drove a 90% increase in investment value within 6 months and converted 35% of non-serious investors into active investors through cross-selling and engagement initiatives.",
+    tags: [
+      { name: "Investments", color: "pink-text-gradient" },
+      { name: "Growth", color: "green-text-gradient" },
+      { name: "Fintech", color: "blue-text-gradient" },
+    ],
+    category: "Product",
+    status: "Completed",
+    highlights: ["90% investment growth", "35% investor conversion"],
+    image: "images/digital-gold.png",
+    source_code_link: "https://github.com/aadi267",
+  },
+  {
+    name: "Loan Against Mutual Funds (LAMF)",
+    description:
+      "Conducted in-depth user research to identify friction points, optimized the loan journey and reduced minimum loan thresholds — resulting in 2x daily disbursals and a 50% revenue uplift.",
+    tags: [
+      { name: "Lending", color: "blue-text-gradient" },
+      { name: "User Research", color: "green-text-gradient" },
+      { name: "Revenue Growth", color: "pink-text-gradient" },
+    ],
+    category: "Product",
+    status: "Completed",
+    highlights: ["2x daily disbursals", "50% revenue uplift"],
+    image: "images/lamf.png",
+    source_code_link: "https://github.com/aadi267",
+  },
+  {
+    name: "Axis NRI Savings Account Journey",
+    description:
+      "Designed a user-friendly NRI savings account onboarding journey for NRIs and Mariners using Agile framework — successfully onboarding over 104,000 users while improving overall customer experience.",
+    tags: [
+      { name: "Onboarding", color: "pink-text-gradient" },
+      { name: "UX", color: "green-text-gradient" },
+      { name: "Banking", color: "blue-text-gradient" },
+    ],
+    category: "Product",
+    status: "Completed",
+    highlights: ["104K+ users onboarded", "Agile delivery"],
+    image: "images/nri-journey.png",
+    source_code_link: "https://github.com/aadi267",
+  },
+  {
+    name: "Axis Credit Card Upgrade Journey",
+    description:
+      "Led end-to-end development of Axis Bank's Credit Card Upgrade Journey for a 10M customer base — improved upgrade success rate and engagement through streamlined user flows by 20%.",
+    tags: [
+      { name: "Credit Cards", color: "blue-text-gradient" },
+      { name: "UX", color: "green-text-gradient" },
+      { name: "Banking", color: "pink-text-gradient" },
+    ],
+    category: "Product",
+    status: "Completed",
+    highlights: ["10M customer base", "20% success rate improvement"],
+    image: "images/cc-upgrade.png",
+    source_code_link: "https://github.com/aadi267",
+  },
+  {
     name: "AI PM Learning Log",
     description:
       "A public 6-month learning log documenting my transition from Product Manager to AI PM — covering TypeScript, Python for AI, prompt engineering, RAG, evals, and shipping 3 real AI products.",
